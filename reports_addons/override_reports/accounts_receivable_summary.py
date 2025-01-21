@@ -12,19 +12,19 @@ def _accounts_receivable_summary():
 	from erpnext.accounts.report.accounts_receivable.accounts_receivable import ReceivablePayableReport
 	from six import iteritems
 
-	def __init__(self, filters=None):
-		self.filters = frappe._dict(filters or {})
-		self.qb_selection_filter = []
-		self.ple = qb.DocType("Payment Ledger Entry")
-		self.filters.report_date = getdate(self.filters.report_date or nowdate())
-		self.age_as_on = (
-			getdate(nowdate()) if self.filters.report_date > getdate(nowdate()) else self.filters.report_date
-		)
+	# def __init__(self, filters=None):
+	# 	self.filters = frappe._dict(filters or {})
+	# 	self.qb_selection_filter = []
+	# 	self.ple = qb.DocType("Payment Ledger Entry")
+	# 	self.filters.report_date = getdate(self.filters.report_date or nowdate())
+	# 	self.age_as_on = (
+	# 		getdate(nowdate()) if self.filters.report_date > getdate(nowdate()) else self.filters.report_date
+	# 	)
 
-		if not self.filters.range:
-			self.filters.range = "30, 60, 90, 120"
-		self.ranges = [num.strip() for num in self.filters.range.split(",") if num.strip()]
-		self.range_numbers = [num for num in range(1, len(self.ranges) + 2)]
+	# 	if not self.filters.range:
+	# 		self.filters.range = "30, 60, 90, 120"
+	# 	self.ranges = [num.strip() for num in self.filters.range.split(",") if num.strip()]
+	# 	self.range_numbers = [num for num in range(1, len(self.ranges) + 2)]
 
 	def _get_columns(self):
 		self.columns = []
