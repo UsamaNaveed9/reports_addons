@@ -179,7 +179,7 @@ def _accounts_receivable_summary():
 	ReceivablePayableReport.set_ageing = _set_ageing
 	ReceivablePayableReport.get_ageing_data = _get_ageing_data
 	ReceivablePayableReport.get_currency_fields = _get_currency_fields
-	ReceivablePayableReport.__init__ = __init__
+	#ReceivablePayableReport.__init__ = __init__
 
 
 def main():
