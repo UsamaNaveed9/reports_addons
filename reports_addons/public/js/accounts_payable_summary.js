@@ -27,7 +27,7 @@ frappe.query_reports["Accounts Payable Summary"] = {
 			fieldname: "range",
 			label: __("Ageing Range"),
 			fieldtype: "Data",
-			default: "-365, -270, -180, -120, -90, -60, -30, 0, 30, 60, 90, 120",
+			default: "120, 90, 60, 30, 0, -30, -60, -90,  -120, -180, -270, -365",
 		},
 		{
 			fieldname: "finance_book",

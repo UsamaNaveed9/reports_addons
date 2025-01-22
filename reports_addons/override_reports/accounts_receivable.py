@@ -50,7 +50,7 @@ def _accounts_receivable():
 		row.age = (getdate(self.age_as_on) - getdate(entry_date)).days or 0
 		
 		index = next(
-			(i for i, days in enumerate(self.ranges) if cint(row.age) <= cint(days)), len(self.ranges)
+			(i for i, days in enumerate(self.ranges) if cint(row.age) >= cint(days)), len(self.ranges)
 		)
 		
 		row["range" + str(index + 1)] = row.outstanding
@@ -207,12 +207,12 @@ def _accounts_receivable():
 	def _setup_ageing_columns(self):
 		# for charts
 		self.ageing_column_labels = []
-		ranges = [*self.ranges, "Above"]
+		ranges = [*self.ranges, "Below"]
 		
 		prev_range_value = ranges[0]
 		for idx, curr_range_value in enumerate(ranges):
 			if idx == 0:  # Special case for the first range
-				label = f"Below-{curr_range_value}"
+				label = f"Above-{curr_range_value}"
 			else:
 				label = f"{prev_range_value}-{curr_range_value}"
 			
@@ -220,7 +220,41 @@ def _accounts_receivable():
 			self.ageing_column_labels.append(label)
 
 			if curr_range_value:
-				prev_range_value = cint(curr_range_value) + 1
+				prev_range_value = cint(curr_range_value) - 1
+
+	def _get_chart_data(self):
+		precision = cint(frappe.db.get_default("float_precision")) or 2
+		total_upcoming_payments = 0
+		total_due_payments = 0
+
+		for row in self.data:
+			row = frappe._dict(row)
+			if not cint(row.bold):
+				# Sum up values for upcoming payments (-365 to 0)
+				total_upcoming_payments += sum(
+					flt(row.get(f"range{i}", 0), precision)
+					for i in self.range_numbers if flt(row.get("age")) < 0
+				)
+
+				# Sum up values for due payments (0 to 365 and beyond)
+				total_due_payments += sum(
+					flt(row.get(f"range{i}", 0), precision)
+					for i in self.range_numbers if flt(row.get("age")) >= 0
+				)
+
+		# Create the chart data
+		labels = [_("Due Payments(0 to Above)"),_("Upcoming Payments(Below to -1)")]
+		values = [total_due_payments, total_upcoming_payments]
+
+		self.chart = {
+			"data": {
+				"labels": labels,
+				"datasets": [{"name": _("Payments"), "values": values}],
+			},
+			"type": "bar",
+			"fieldtype": "Currency",
+			"options": "currency",
+		}
 
 
 	ReceivablePayableReport.__init__ = __init__
@@ -229,6 +263,7 @@ def _accounts_receivable():
 	ReceivablePayableReport.get_currency_fields = _get_currency_fields
 	ReceivablePayableReport.setup_ageing_columns = _setup_ageing_columns
 	ReceivablePayableReport.get_columns = _get_columns
+	ReceivablePayableReport.get_chart_data = _get_chart_data
 
 
 def main():
