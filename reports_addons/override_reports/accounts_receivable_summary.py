@@ -186,49 +186,19 @@ def _accounts_receivable_summary():
 	
 	def _get_chart_data(self):
 		precision = cint(frappe.db.get_default("float_precision")) or 2
-		upcoming_range = []
-		total_upcoming_payments = 0
-		due_range = []
-		total_due_payments = 0
-
-		# Update the ranges
-		for idx, value in zip(self.range_numbers, self.ranges):
-			num = int(value.strip())
-			if num < 0:
-				# Update upcoming_range if the value is negative
-				if idx not in upcoming_range:
-					upcoming_range.append(idx)
-			elif num >= 0:
-				# Update due_range if the value is positive
-				if idx not in due_range:
-					due_range.append(idx)
-
-		if upcoming_range:
-			upcoming_range.append((upcoming_range[-1] + 1))
-		else:
-			upcoming_range.append((due_range[-1] + 1))
-		# Optional: Sort the lists
-		upcoming_range = sorted(upcoming_range)
-		due_range = sorted(due_range)
-
+		# Initialize lists to store range-wise sums
+		range_sums = [0] * len(self.range_numbers)
+		
 		for row in self.data:
 			row = frappe._dict(row)
 			if not cint(row.bold):
-				# Sum up values for upcoming payments (-365 to 0)
-				total_upcoming_payments += sum(
-					flt(row.get(f"range{i}", 0), precision)
-					for i in upcoming_range
-				)
+				for i, range_num in enumerate(self.range_numbers):
+					range_value = flt(row.get(f"range{range_num}", 0), precision)
+					range_sums[i] += range_value
 
-				# Sum up values for due payments (0 to 365 and beyond)
-				total_due_payments += sum(
-					flt(row.get(f"range{i}", 0), precision)
-					for i in due_range
-				)
-				
 		# Create the chart data
-		labels = [_("Due Payments(0 to Above)"),_("Upcoming Payments(Below to -1)")]
-		values = [total_due_payments, total_upcoming_payments]
+		labels = self.ageing_column_labels
+		values = range_sums
 
 		self.chart = {
 			"data": {
